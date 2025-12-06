@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shikkhok-Bondhu | Bilingual AI Teacher</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config for Custom Fonts & Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Times Now', 'Times New Roman', 'serif'],
+                        sans: ['Neue Montreal', 'Helvetica Now', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['Sweet Sans Pro', 'Courier New', 'monospace'],
+                    },
+                    colors: {
+                        'editorial-black': '#0a0a0a',
+                        'editorial-white': '#f4f4f0',
+                        'editorial-gray': '#888888',
+                    },
+                    transitionTimingFunction: {
+                        'exo': 'cubic-bezier(0.62, 0.05, 0.01, 0.99)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Font Face Simulation (Assuming local availability or generic fallback) */
+        @font-face {
+            font-family: 'Times Now';
+            src: local('Times Now'), local('TimesNewRomanpsMT');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Neue Montreal';
+            src: local('Neue Montreal'), local('Helvetica');
+            font-weight: normal;
+        }
+        
+        body {
+            background-color: #050505;
+            color: #f4f4f0;
+            overflow-x: hidden;
+        }
+
+        /* The "Bloom" Utility */
+        .bloom-image {
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+            filter: grayscale(20%) brightness(80%);
+        }
+        
+        .bloom-container:hover .bloom-image {
+            transform: scale(1.05);
+            filter: grayscale(0%) brightness(110%) contrast(105%);
+        }
+
+        /* Smooth Scroll styling (Lenis simulation via CSS for single file) */
+        html.lenis {
+            height: auto;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { motion, useScroll, useTransform, useSpring } = window.Motion;
+        const { ArrowDown, Cpu, Zap, Database, Terminal, Mic, Speaker, Layers, ExternalLink } = lucide;
+
+        // --- COMPONENTS ---
+
+        // 1. Navigation (Minimalist)
+        const Navigation = () => (
+            <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 mix-blend-difference text-editorial-white flex justify-between items-center font-mono text-xs tracking-widest uppercase">
+                <div>Shikkhok-Bondhu v1.0</div>
+                <div className="hidden md:flex gap-8">
+                    <a href="#overview" className="hover:opacity-50 transition-opacity">Overview</a>
+                    <a href="#specs" className="hover:opacity-50 transition-opacity">Specs</a>
+                    <a href="#code" className="hover:opacity-50 transition-opacity">Source</a>
+                </div>
+                <div>Menu</div>
+            </nav>
+        );
+
+        // 2. Parallax Bloom Image (Exo Ape Style)
+        const ParallaxBloom = ({ src, alt, className, speed = 0.5 }) => {
+            const ref = useRef(null);
+            const { scrollYProgress } = useScroll({
+                target: ref,
+                offset: ["start end", "end start"]
+            });
+            
+            const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+            
+            return (
+                <div ref={ref} className={`bloom-container overflow-hidden relative ${className}`}>
+                    <motion.div style={{ y }} className="w-full h-[120%] -mt-[10%]">
+                        <img 
+                            src={src} 
+                            alt={alt} 
+                            className="bloom-image w-full h-full object-cover" 
+                        />
+                    </motion.div>
+                </div>
+            );
+        };
+
+        // 3. Asymmetric Text Block (Makhno Style)
+        const AsymText = ({ label, title, children, colStart, colSpan, className }) => (
+            <div className={`col-span-12 md:col-start-${colStart} md:col-span-${colSpan} flex flex-col gap-6 ${className}`}>
+                <div className="border-t border-editorial-white/20 pt-4 flex justify-between items-baseline">
+                    <span className="font-mono text-xs tracking-widest opacity-60 uppercase">{label}</span>
+                    <span className="font-serif italic opacity-40">01</span>
+                </div>
+                <h3 className="font-serif text-3xl md:text-5xl leading-[1.1]">{title}</h3>
+                <div className="font-sans text-editorial-gray text-lg leading-relaxed max-w-lg">
+                    {children}
+                </div>
+            </div>
+        );
+
+        // 4. Rigid Card (Owlsome Style)
+        const RigidCard = ({ number, title, subtitle, items }) => (
+            <div className="group border-l border-editorial-white/10 pl-6 py-4 flex flex-col justify-between h-full min-h-[400px] transition-colors duration-500 hover:border-editorial-white/50">
+                <div className="flex flex-col gap-2">
+                    <span className="font-mono text-xs tracking-widest text-editorial-gray mb-8">0{number}</span>
+                    <h4 className="font-serif text-3xl mb-2">{title}</h4>
+                    <p className="font-mono text-xs uppercase tracking-wide opacity-50 mb-8">{subtitle}</p>
+                </div>
+                
+                <ul className="space-y-4">
+                    {items.map((item, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm font-sans text-editorial-gray group-hover:text-editorial-white transition-colors">
+                            <span className="mt-1 w-1 h-1 bg-editorial-gray rounded-full group-hover:bg-editorial-white"></span>
+                            {item}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+
+        // --- MAIN APP COMPONENT ---
+
+        const App = () => {
+            const { scrollYProgress } = useScroll();
+            const scaleX = useSpring(scrollYProgress, {
+                stiffness: 100,
+                damping: 30,
+                restDelta: 0.001
+            });
+
+            return (
+                <div className="bg-editorial-black min-h-screen w-full selection:bg-white selection:text-black">
+                    <Navigation />
+                    
+                    {/* Progress Bar */}
+                    <motion.div
+                        className="fixed top-0 left-0 right-0 h-1 bg-editorial-white origin-left z-50 mix-blend-difference"
+                        style={{ scaleX }}
+                    />
+
+                    {/* HERO SECTION (Exo Ape Vibe) */}
+                    <header className="relative w-full h-screen flex flex-col justify-center px-6 md:px-12 overflow-hidden">
+                        <div className="absolute inset-0 z-0 opacity-40">
+                             {/* Abstract Abstract Background using CSS gradients instead of image to ensure load */}
+                            <div className="w-full h-full bg-[radial-gradient(circle_at_50%_50%,_#333_0%,_#000_70%)]"></div>
+                        </div>
+                        
+                        <div className="z-10 relative mt-20">
+                            <motion.div 
+                                initial={{ opacity: 0, y: 100 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 1.2, ease: [0.62, 0.05, 0.01, 0.99] }}
+                            >
+                                <h1 className="font-serif text-[14vw] leading-[0.85] tracking-tighter text-editorial-white mix-blend-overlay">
+                                    Shikkhok
+                                </h1>
+                                <h1 className="font-serif text-[14vw] leading-[0.85] tracking-tighter text-editorial-white ml-[10vw]">
+                                    Bondhu
+                                </h1>
+                            </motion.div>
+                            
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.8, duration: 1 }}
+                                className="flex flex-col md:flex-row justify-between items-end mt-12 border-t border-editorial-white/20 pt-6 max-w-6xl mx-auto"
+                            >
+                                <div className="font-mono text-xs uppercase tracking-widest max-w-[200px]">
+                                    (Teacher-Friend)<br/>
+                                    Bilingual AI Teacher Demo
+                                </div>
+                                <div className="font-sans text-xl md:text-2xl max-w-md text-right mt-6 md:mt-0">
+                                    A working prototype guide for deploying an offline-first AI educator for under $400.
+                                </div>
+                            </motion.div>
+                        </div>
+                    </header>
+
+                    {/* OVERVIEW SECTION (Makhno Grid) */}
+                    <section id="overview" className="relative py-32 md:py-64 px-6 md:px-12">
+                        <div className="grid grid-cols-12 gap-y-32 gap-x-4 max-w-[1600px] mx-auto">
+                            
+                            {/* Intro Text Offset */}
+                            <AsymText 
+                                label="Mission Scope" 
+                                title="Democratizing Education via Edge AI" 
+                                colStart="2" 
+                                colSpan="5"
+                            >
+                                <p className="mb-6">
+                                    Targeting a working prototype in 4 weeks. The goal is simple yet ambitious: deliver a Raspberry Pi box or Android APK that serves as a bilingual tutor for Grade 5-8 Math, English, and Science.
+                                </p>
+                                <div className="font-mono text-xs border border-editorial-white/20 p-4 inline-block">
+                                    BUDGET &lt; $400 USD
+                                </div>
+                            </AsymText>
+
+                            {/* Image Break */}
+                            <div className="col-span-12 md:col-start-8 md:col-span-5 h-[60vh] relative">
+                                <ParallaxBloom 
+                                    src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2600&auto=format&fit=crop" 
+                                    alt="Education Abstract" 
+                                    className="w-full h-full grayscale hover:grayscale-0 transition-all duration-700"
+                                />
+                            </div>
+
+                            {/* Second Text Block Offset */}
+                            <AsymText 
+                                label="Architecture" 
+                                title="Local-First Intelligence" 
+                                colStart="6" 
+                                colSpan="6"
+                            >
+                                <p>
+                                    The system processes inputs via Whisper (Speech) or MiniCPM-V (Vision), routes through a Bangla-finetuned Phi-3 LLM via RAG retrieval from NCTB textbooks, and outputs via Coqui TTS. All locally. No internet required.
+                                </p>
+                            </AsymText>
+                        </div>
+                    </section>
+
+                    {/* SPECS SECTION (Owlsome Rigid Grid) */}
+                    <section id="specs" className="bg-[#0f0f0f] py-32 px-6 md:px-12 border-t border-editorial-white/10">
+                        <div className="max-w-[1600px] mx-auto">
+                            <div className="mb-24">
+                                <h2 className="font-serif text-6xl md:text-8xl mb-6">Build Specifications</h2>
+                                <p className="font-mono text-sm opacity-50 uppercase tracking-widest">Bill of Materials & Stack</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-0">
+                                {/* Card 1: Hardware A */}
+                                <RigidCard 
+                                    number="1" 
+                                    title="Pi Box Config" 
+                                    subtitle="Headless / Touch — ~$238"
+                                    items={[
+                                        "Raspberry Pi 5 (8 GB RAM)",
+                                        "MicroSD Card 256 GB A2",
+                                        "USB Microphone + Mini Speaker",
+                                        "Solar Panel + Battery (20W + 20Ah)",
+                                        "Cooling Case + Fan"
+                                    ]}
+                                />
+                                
+                                {/* Card 2: Hardware B */}
+                                <RigidCard 
+                                    number="2" 
+                                    title="Mobile Config" 
+                                    subtitle="Android APK — ~$132"
+                                    items={[
+                                        "Redmi 12 / Realme C55 (6GB+)",
+                                        "OR Samsung A14 (4GB+)",
+                                        "MicroSD Card 128 GB",
+                                        "Power Bank 10000 mAh",
+                                        "Portable Offline Deployment"
+                                    ]}
+                                />
+
+                                {/* Card 3: Software */}
+                                <RigidCard 
+                                    number="3" 
+                                    title="Software Stack" 
+                                    subtitle="Open Source / Quantized"
+                                    items={[
+                                        "Base: Phi-3-mini-4k-instruct (Q4_K_M)",
+                                        "Fine-tune: Bangla LoRA (NCTB Data)",
+                                        "STT: Whisper-small (Bangla Tuned)",
+                                        "TTS: Coqui TTS (VITS model)",
+                                        "RAG: ChromaDB + SQLite"
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* TIMELINE SECTION (Horizontal Flow) */}
+                    <section className="py-32 overflow-hidden border-b border-editorial-white/10">
+                         <div className="px-6 md:px-12 max-w-[1600px] mx-auto mb-16">
+                            <h2 className="font-serif text-4xl">Execution Timeline</h2>
+                        </div>
+                        
+                        <div className="flex overflow-x-auto hide-scrollbar px-6 md:px-12 gap-8 pb-12 snap-x">
+                            {[
+                                { week: "01", title: "Data & Models", desc: "Download NCTB PDFs. OCR/Extract. Generate Embeddings. Fine-tune LoRA on Cloud GPU." },
+                                { week: "02", title: "Core Backend", desc: "Setup llama.cpp on Pi5. Build RAG Pipeline. Integrate Whisper & Coqui TTS. API Layer." },
+                                { week: "03", title: "Frontend", desc: "Gradio Web Interface. Flutter App for Android. Offline stress testing." },
+                                { week: "04", title: "Pilot & Polish", desc: "Script demo scenarios. Package SD Image. 2-Day School Pilot. Final Presentation." }
+                            ].map((step, i) => (
+                                <div key={i} className="min-w-[300px] md:min-w-[400px] snap-center border-t border-editorial-white p-6 bg-[#111]">
+                                    <div className="font-mono text-4xl mb-4 text-editorial-white/20">WK/{step.week}</div>
+                                    <h3 className="font-sans text-xl font-bold mb-4">{step.title}</h3>
+                                    <p className="font-sans text-sm text-editorial-gray leading-relaxed">{step.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* CODE / SCENARIO SECTION (Dark Mode Terminal) */}
+                    <section id="code" className="py-32 px-6 md:px-12 bg-[#050505]">
+                        <div className="max-w-[1200px] mx-auto">
+                            <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+                                <h2 className="font-serif text-5xl">Live Demo Scenarios</h2>
+                                <p className="font-mono text-xs text-editorial-gray mt-4 md:mt-0">15 MINUTE PRESENTATION SCRIPT</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                {/* Scenario 1 */}
+                                <div className="space-y-8">
+                                    <div className="p-8 border border-editorial-white/10 bg-[#0a0a0a] hover:border-editorial-white/30 transition-colors">
+                                        <div className="flex items-center gap-3 mb-6 text-editorial-white/60">
+                                            <Mic size={18} />
+                                            <span className="font-mono text-xs uppercase">Input: Voice (Bangla)</span>
+                                        </div>
+                                        <p className="font-serif text-2xl italic mb-4">"ভগ্নাংশের গুণ কিভাবে করতে হয়?"</p>
+                                        <p className="font-sans text-sm text-editorial-gray">(How do I multiply fractions?)</p>
+                                        
+                                        <div className="mt-8 pt-8 border-t border-dashed border-editorial-white/10">
+                                             <div className="flex items-center gap-3 mb-4 text-emerald-400/80">
+                                                <Speaker size={18} />
+                                                <span className="font-mono text-xs uppercase">AI Response</span>
+                                            </div>
+                                            <p className="font-sans text-lg text-editorial-white/90">
+                                                "ভগ্নাংশের গুণ করতে হলে, প্রথমে লব দুটি গুণ করো, তারপর হর দুটি গুণ করো। উদাহরণ: ২/৩ × ৪/৫ = ৮/১৫"
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                     <div className="p-8 border border-editorial-white/10 bg-[#0a0a0a] hover:border-editorial-white/30 transition-colors">
+                                        <div className="flex items-center gap-3 mb-6 text-editorial-white/60">
+                                            <Database size={18} />
+                                            <span className="font-mono text-xs uppercase">Offline Check</span>
+                                        </div>
+                                        <p className="font-sans text-sm text-editorial-gray mb-4">
+                                            <span className="text-red-500 mr-2">●</span> Network Disconnected
+                                        </p>
+                                        <p className="font-serif text-2xl italic mb-4">"What is the water cycle?"</p>
+                                        
+                                        <div className="mt-8 pt-8 border-t border-dashed border-editorial-white/10">
+                                            <p className="font-sans text-lg text-editorial-white/90">
+                                                AI responds correctly with diagram description and curriculum-aligned content from local RAG database.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Code Snippet */}
+                                <div className="relative">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-gray-800 to-gray-900 blur opacity-20"></div>
+                                    <div className="relative bg-[#080808] border border-editorial-white/10 p-6 font-mono text-xs md:text-sm text-gray-300 h-full overflow-hidden">
+                                        <div className="flex gap-2 mb-6 opacity-50">
+                                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                            <span className="ml-2 text-xs">shikkhok_bondhu.py</span>
+                                        </div>
+                                        <pre className="overflow-x-auto">
+{`class TeacherAgent:
+    def __init__(self):
+        self.llm = load_llm()
+        self.rag = RAGRetriever()
+        self.stt = BanglaSpeechToText()
+        self.tts = BanglaTextToSpeech()
+      
+    def chat(self, user_input: str) -> str:
+        # Detect language
+        lang = detect_language(user_input)
+        sys_prompt = PROMPT_BN if lang == "bn" else PROMPT_EN
+          
+        # RAG Retrieval
+        context = self.rag.retrieve(user_input, k=3)
+          
+        # LLM Inference (Phi-3-mini-4bit)
+        response = self.llm(
+            f"{sys_prompt}\\nContext: {context}\\nUser: {user_input}",
+            max_tokens=512
+        )
+        return response`}
+                                        </pre>
+                                        <div className="mt-6 flex items-center gap-2 text-emerald-500">
+                                            <Terminal size={14} />
+                                            <span>System Ready. Listening on port 7860...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* FOOTER */}
+                    <footer className="py-24 px-6 md:px-12 border-t border-editorial-white/10 flex flex-col md:flex-row justify-between items-start">
+                        <div>
+                            <h1 className="font-serif text-4xl mb-6">Shikkhok-Bondhu</h1>
+                            <p className="font-sans text-editorial-gray max-w-sm">
+                                Empowering the next generation of learners in Bangladesh with accessible, offline-first AI technology.
+                            </p>
+                        </div>
+                        <div className="mt-12 md:mt-0 flex gap-12 font-mono text-xs uppercase tracking-widest">
+                            <div className="flex flex-col gap-4">
+                                <span className="opacity-40">Project</span>
+                                <a href="#" className="hover:text-white transition-colors">Documentation</a>
+                                <a href="#" className="hover:text-white transition-colors">GitHub Repo</a>
+                                <a href="#" className="hover:text-white transition-colors">Download Model</a>
+                            </div>
+                            <div className="flex flex-col gap-4">
+                                <span className="opacity-40">Contact</span>
+                                <a href="#" className="hover:text-white transition-colors">MoE Proposal</a>
+                                <a href="#" className="hover:text-white transition-colors">Dev Team</a>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
